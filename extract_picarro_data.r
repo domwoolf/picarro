@@ -1,10 +1,8 @@
-# Program:
-# extract_picarro.r
-#
+# Program: extract_picarro_data.r
 # Version 0.6
 # Author Dominic Woolf
 # Revised Jan 17 2018, 
-#
+
 
 #############################################################################################################
 #  Load Packages 
@@ -204,8 +202,9 @@ extract_picarro = function(data_path = NA, lambda = 1e-4) {
   short.data[, evolved.ch4 := headspace.ch4 - headspace.ch4_purge] # subtract ppm co2 that was in the jar to begin with
 
   #############################################################################################################
-  #  And we're done!
+  #  Add a days since start column, and we're done!
   #############################################################################################################
+  short.data[, day := (epoch - epoch[1]) / (60 * 60 * 24), by = sample]
   return(short.data)
 }
 
@@ -214,10 +213,10 @@ extract_picarro = function(data_path = NA, lambda = 1e-4) {
 # Examples and vignettes
 #############################################################################################################
 short.data = extract_picarro()
-ggplot(short.data[-1], aes(cycle, respired.co2)) +
+ggplot(short.data[-1], aes(day, respired.co2)) +
   geom_line() +
   facet_wrap(~ sample)
 
-ggplot(short.data[-1], aes(cycle, evolved.ch4)) +
+ggplot(short.data[-1], aes(day, evolved.ch4)) +
   geom_line() +
   facet_wrap(~ sample)
