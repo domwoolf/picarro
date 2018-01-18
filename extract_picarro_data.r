@@ -178,20 +178,19 @@ extract_picarro = function(data_path = NA, lambda = 1e-4) {
   #############################################################################################################
   #  Correct CO2 concentrations for residual co2 in pipework & analyzer
   #############################################################################################################
-  # fractional_volume from the file fractional_volume.txt... 
-  # ...provides headspace divided by total volume (incl. analyzer and pipework)
+  # fractional_volume from the file fractional_volume.txt provides headspace divided by total volume (incl. analyzer and pipework)
   short.data = merge(short.data, fractional_volume, all.x = T, by='sample')
   
   # headspace CO2 is measured CO2, adjusted for the fraction of CO2 from pipework dilutant
-  # NB note there were missing parentheses in previous version of code!
   short.data[, headspace.co2  := (CO2_respiration - (1-fractional_volume) * dilute.co2_respiration) / fractional_volume ]
   short.data[, headspace.co2_purge  := (CO2_purge - (1-fractional_volume) * dilute.co2_purge) / fractional_volume ]
   
-  # Need to adjust d13C by quantity of dilutant co2 relative to quantity respired (not concentrations!!)
+  # Need to adjust d13C by *quantity* of dilutant co2 relative to *quantity* respired (not concentrations!!)
   short.data[, fractional_mass  := fractional_volume * CO2_respiration/headspace.co2] #like fractional volume, but on a mass of carbon basis
   short.data[, headspace.d13c := (d13C_respiration - (1-fractional_mass)*dilute.d13C_respiration)/fractional_mass]
   
-  short.data[, respired.co2 := headspace.co2 - headspace.co2_purge] # subtract ppm co2 that was in the jar to begin with
+  # subtract ppm co2 that was in the jar to begin with
+  short.data[, respired.co2 := headspace.co2 - headspace.co2_purge] 
 
   #############################################################################################################
   #  Apply the same correction factors to the CH4 data
