@@ -36,31 +36,29 @@ if (!require(regSmooth, quietly=T)) { # grab package regSmooth from github if it
 select_directory_method = function() {
   # Tries out a sequence of potential methods for selecting a directory to find one that works 
   # The fallback default method if nothing else works is to get user input from the console
-  if (exists('utils::choose.dir')) {
-    .dir.method = 'choose.dir'
-  } else if (rstudioapi::isAvailable() & rstudioapi::getVersion() > '1.1.287') {
-    .dir.method = 'RStudioAPI'
-    ensure_library('rstudioapi')
-  } else if(ensure_library('tcltk') & 
-            class(try({tt  <- tktoplevel(); tkdestroy(tt)}, silent = TRUE)) != "try-error") {
-    .dir.method = 'tcltk'
-  } else if (ensure_library('gWidgets2') & ensure_library('RGtk2')) {
-    .dir.method = 'gWidgets2RGtk2'
-  } else if (ensure_library('rJava') & ensure_library('rChoiceDialogs')) {
-    .dir.method = 'rChoiceDialogs'
-  } else {
-    .dir.method = 'console'
+  if (!exists('.dir.method')){  # if we already established the best method, just use that
+    # otherwise lets try out some options to find the best one that works here
+    if (exists('utils::choose.dir')) {
+      .dir.method = 'choose.dir'
+    } else if (rstudioapi::isAvailable() & rstudioapi::getVersion() > '1.1.287') {
+      .dir.method = 'RStudioAPI'
+      ensure_library('rstudioapi')
+    } else if(ensure_library('tcltk') & 
+              class(try({tt  <- tktoplevel(); tkdestroy(tt)}, silent = TRUE)) != "try-error") {
+      .dir.method = 'tcltk'
+    } else if (ensure_library('gWidgets2') & ensure_library('RGtk2')) {
+      .dir.method = 'gWidgets2RGtk2'
+    } else if (ensure_library('rJava') & ensure_library('rChoiceDialogs')) {
+      .dir.method = 'rChoiceDialogs'
+    } else {
+      .dir.method = 'console'
+    }
+    assign('.dir.method', .dir.method, envir = .GlobalEnv) # remember the chosen method for later
   }
-  .dir.method
+  return(.dir.method)
 }
 
-choose_directory = function(method = .dir.method, title = 'Select data directory') {
-  # Interactively select a directory using predetermined method
-  # If no method has already been established, calls select_directory_method to find one that works 
-  if (missing(method)) {
-    if (!exists('.dir.method')) assign('.dir.method', select_directory_method(), envir = .GlobalEnv)
-    method = .dir.method
-  }
+choose_directory = function(method = select_directory_method(), title = 'Select data directory') {
   switch (method,
           'choose.dir' = choose.dir(caption = title),
           'RStudioAPI' = selectDirectory(caption = title),
