@@ -1,74 +1,37 @@
 # Program: extract_picarro_data.r
 # Version 0.6
 # Author Dominic Woolf
-# Revised Jan 17 2018, 
+# Revised Jan 19 2018, 
 
 
 #############################################################################################################
 #  Load Packages 
 #############################################################################################################
-ensure_library = function (lib.name){
-  # Tries to load package, installing from CRAN if not already installed.
-  # Returns logical value for whether successful
+ensure_library = function (lib.name) { #Tries to load package, installing from CRAN if not already installed.
   x = require(lib.name, quietly = TRUE, character.only = TRUE)
   if (!x) {
     install.packages(lib.name, dependencies = TRUE, quiet = TRUE)
     x = require(lib.name, quietly = TRUE, character.only = TRUE)
   }
-  x
+  x   # Returns logical value for whether successful
 }
-invisible({
 ensure_library('data.table')
 ensure_library('ggplot2')
 ensure_library('cowplot')
 ensure_library('tcltk')
-})
+ensure_library('devtools')
 
 if (!require(regSmooth, quietly=T)) { # grab package regSmooth from github if it is not installed already
-  library(devtools)
   install_github('domwoolf/regSmooth')
   library(regSmooth) # provides advanced data smoothing by Tikhonov regularization
 }
 
 #############################################################################################################
-#  Some helper functions to select a directory interactively in a platform-independednt and fail-safe way 
+#  Helper function to select a directory interactively in a platform-independent way 
 #############################################################################################################
-select_directory_method = function() {
-  # Tries out a sequence of potential methods for selecting a directory to find one that works 
-  # The fallback default method if nothing else works is to get user input from the console
-  if (!exists('.dir.method')){  # if we already established the best method, just use that
-    # otherwise lets try out some options to find the best one that works here
-    if (exists('utils::choose.dir')) {
-      .dir.method = 'choose.dir'
-    } else if (rstudioapi::isAvailable() & rstudioapi::getVersion() > '1.1.287') {
-      .dir.method = 'RStudioAPI'
-      ensure_library('rstudioapi')
-    } else if(ensure_library('tcltk') & 
-              class(try({tt  <- tktoplevel(); tkdestroy(tt)}, silent = TRUE)) != "try-error") {
-      .dir.method = 'tcltk'
-    } else if (ensure_library('gWidgets2') & ensure_library('RGtk2')) {
-      .dir.method = 'gWidgets2RGtk2'
-    } else if (ensure_library('rJava') & ensure_library('rChoiceDialogs')) {
-      .dir.method = 'rChoiceDialogs'
-    } else {
-      .dir.method = 'console'
-    }
-    assign('.dir.method', .dir.method, envir = .GlobalEnv) # remember the chosen method for later
-  }
-  return(.dir.method)
+choose_directory = function(caption = 'Select data directory') {
+  if (exists('utils::choose.dir')) choose.dir(caption = caption) else tk_choose.dir(caption = caption)
 }
-
-choose_directory = function(method = select_directory_method(), title = 'Select data directory') {
-  switch (method,
-          'choose.dir' = choose.dir(caption = title),
-          'RStudioAPI' = selectDirectory(caption = title),
-          'tcltk' = tk_choose.dir(caption = title),
-          'rChoiceDialogs' = rchoose.dir(caption = title),
-          'gWidgets2RGtk2' = gfile(type = 'selectdir', text = title),
-          readline('Please enter directory path: ')
-  )
-}
-
 
 #############################################################################################################
 # Data extraction begins here
