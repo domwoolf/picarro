@@ -1,0 +1,12 @@
+Package: Picarro
+Title: Lehmann lab Picarro
+Version: 0.01
+Date: 2018-1-20
+Author: Dominic Woolf
+Authors@R: person("Dominic", "Woolf", email = "d.woolf@cornell.edu", role = c("aut", "cre"))
+Maintainer: Dominic Woolf <d.woolf@cornell.edu>
+Description: This package provides functions to process and analyze data from Lehmann lab Picarro analyzer.
+Remotes: domwoolf/regSmooth
+Depends: R (>= 3.1.1), data.table, tcltk, regSmooth
+License: GPL-3
+RoxygenNote: 6.0.1

@@ -1,63 +1,69 @@
 # Program: extract_picarro_data.r
-# Version 0.6
 # Author Dominic Woolf
 # Revised Jan 19 2018, 
-
-
-#############################################################################################################
-#  Load Packages 
-#############################################################################################################
-ensure_library = function (lib.name) { #Tries to load package, installing from CRAN if not already installed.
-  x = require(lib.name, quietly = TRUE, character.only = TRUE)
-  if (!x) {
-    install.packages(lib.name, dependencies = TRUE, quiet = TRUE)
-    x = require(lib.name, quietly = TRUE, character.only = TRUE)
-  }
-  x   # Returns logical value for whether successful
-}
-ensure_library('data.table')
-ensure_library('ggplot2')
-ensure_library('cowplot')
-ensure_library('tcltk')
-ensure_library('devtools')
-
-if (!require(regSmooth, quietly=T)) { # grab package regSmooth from github if it is not installed already
-  install_github('domwoolf/regSmooth')
-  library(regSmooth) # provides advanced data smoothing by Tikhonov regularization
-}
-
-#############################################################################################################
-#  Helper function to select a directory interactively in a platform-independent way 
-#############################################################################################################
+#' Interactive dialogue to allow user to select a directory
+#' 
+#' Function to select a directory interactively in a platform-independent way
+#' @details
+#' This function allows directory selection in a way that should work on any (most?) platforms 
+#' @param caption Optional text to print in title of selection dialogue
+#' @export
+#' @return Length one character vector containing path to selected directory
+#' @author
+#'   Dominic Woolf.
+#'   d.woolf@cornell.edu
+#' @examples
+#' choose_directory()
 choose_directory = function(caption = 'Select data directory') {
-  if (exists('utils::choose.dir')) choose.dir(caption = caption) else tk_choose.dir(caption = caption)
-}
+  if (exists('utils::choose.dir')) {
+    choose.dir(caption = caption) 
+    } else {
+      tk_choose.dir(caption = caption)
+    }
+  }
 
-#############################################################################################################
-# Data extraction begins here
-#############################################################################################################
+
+#' Data extraction from Lehmann lab Picarro isotope analyzer
+#'
+#' Function to convert raw data from picarro analyzer to respiration data
+#' @details
+#' This function returns a data.table with respired CO2 and CH4 concentrations and delta-13C values for each sample at each samping time
+#'
+#' The data path **must** contain the following three things: 
+#'   1. All raw Picarro data files nfor this experiment. Can be in nested subdirectories.
+#'   NB picarro files are assumed to end in .dat -- No other files in the data path should have this ending
+#'   2. fractional_volume.txt  = provides fraction of head space gas divided by total volume including residal gas in the analyzer and pipework
+#'   3. logfile (filename must start with the characters "logfile"), which contains epoch time, sample ID, and step ID:
+#'           Step 2 = sample analysis
+#'           Step 3 = end of step 2
+#'           Step 5 = purge analysis
+#'           Step 6 = end of step 5
+#'
+#' @param data_path Directory containing all raw data from picarro analyzer within nested subdirectories. If not provided, user will be asked for path interactively.
+#' @param lambda Optional smoothing parameter (positive real numeric). Higher values give greater smoothing. Smaller values follow data more closely. See help(regSmooth) for more details.
+#' @import data.table 
+#' @export
+#' @return Provides a data.table with respired CO2 and CH4 concentrations and delta-13C values for each sample at each samping time
+#' @author
+#'   Dominic Woolf.
+#'   d.woolf@cornell.edu
+#' @keywords Soil Incubation
+#' @examples
+#' short.data = extract_picarro()
+#' library(ggplot2)
+#' ggplot(short.data[-1], aes(day, respired.co2)) +
+#'   geom_line() +
+#'   facet_wrap(~ sample)
+#' 
+#' ggplot(short.data[-1], aes(day, evolved.ch4)) +
+#'   geom_line() +
+#'   facet_wrap(~ sample)
 extract_picarro = function(data_path = NA, lambda = 1e-4) {
-  # This function returns a data.table with respired CO2 concentration and d13C for each sample at each samping time
-  #
-  # Required inputs:
-  #   data_path = directory containing all raw data from picarro analyzer within nested subdirectories
-  #               if data_path is not provided in the function call, it can be selected interactively
-  #   NB picarro files are assumed to end in .dat -- No other files in the data path should have this ending
-  #   In addition to raw Picarro data, the data_path must also contain the following 2 files:
-  #   fractional_volume.txt  = provides fraction of head space gas divided by total volume including residal gas in the analyzer and pipework
-  #   logfile (filename must start with the characters "logfile"), which contains epoch time, sample ID, and step ID:
-  #           Step 2 = sample analysis
-  #           Step 3 = end of step 2
-  #           Step 5 = purge analysis
-  #           Step 6 = end of step 5
-  #
-  # Optional parameters:
-  #   lambda is the smoothing parameter - see help(regSmooth)
   #
   #############################################################################################################
   #  Load Data Files 
   #############################################################################################################
-  if (is.na(data_path)) data_path = choose_directory(title = "Select data directory")
+  if (is.na(data_path)) data_path = choose_directory(caption = "Select data directory")
   logfile = list.files(data_path, pattern = 'logfile*', full.names = TRUE)
   if (length(logfile) != 1L) stop('Need exactly one logfile in the data path')
   log_data = fread(logfile)
@@ -167,16 +173,3 @@ extract_picarro = function(data_path = NA, lambda = 1e-4) {
   short.data[, day := (epoch - epoch[1]) / (60 * 60 * 24), by = sample]
   return(short.data)
 }
-
-
-#############################################################################################################
-# Examples and vignettes
-#############################################################################################################
-short.data = extract_picarro()
-ggplot(short.data[-1], aes(day, respired.co2)) +
-  geom_line() +
-  facet_wrap(~ sample)
-
-ggplot(short.data[-1], aes(day, evolved.ch4)) +
-  geom_line() +
-  facet_wrap(~ sample)
