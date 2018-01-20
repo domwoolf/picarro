@@ -26,11 +26,20 @@ The data path \strong{must} contain the following three things:
   \item All raw Picarro data files nfor this experiment. Can be in nested subdirectories.
   NB picarro files are assumed to end in .dat -- No other files in the data path should have this ending
   \item fractional_volume.txt  = provides fraction of head space gas divided by total volume including residal gas in the analyzer and pipework
+<<<<<<< HEAD
   \item logfile (filename must start with the characters "logfile"), which contains epoch time, sample ID, and step ID 
           ("Step 2" = sample analysis;
            "Step 3" = end of step 2;
            "Step 5" = purge analysis;
            "Step 6" = end of step 5).
+}
+=======
+  \item logfile (filename must start with the characters "logfile"), which contains epoch time, sample ID, and step ID:
+          Step 2 = sample analysis
+          Step 3 = end of step 2
+          Step 5 = purge analysis
+          Step 6 = end of step 5
+>>>>>>> 4add3e83de4a07f0aa8f1e48de1669099935c04e
 }
 }
 \examples{
