@@ -1,11 +1,15 @@
 # Program: extract_picarro_data.r
 # Author Dominic Woolf
 # Revised Jan 19 2018, 
+# Contains functions to extract raw picarro data and convert to respired CO2 & CH4 
+
+
 #' Interactive dialogue to allow user to select a directory
 #' 
 #' Function to select a directory interactively in a platform-independent way
 #' @details
-#' This function allows directory selection in a way that should work on any (most?) platforms 
+#' This function allows directory selection in a way that should work 
+#' on any (most?) platforms.
 #' @param caption Optional text to print in title of selection dialogue
 #' @export
 #' @return Length one character vector containing path to selected directory
@@ -27,17 +31,20 @@ choose_directory = function(caption = 'Select data directory') {
 #'
 #' Function to convert raw data from picarro analyzer to respiration data
 #' @details
-#' This function returns a data.table with respired CO2 and CH4 concentrations and delta-13C values for each sample at each samping time
+#' This function returns a data.table with respired CO2 and CH4 
+#' concentrations and delta-13C values for each sample at each samping time
 #'
-#' The data path **must** contain the following three things: 
-#'   1. All raw Picarro data files nfor this experiment. Can be in nested subdirectories.
+#' The data path \strong{must} contain the following three things: 
+#' \enumerate{
+#'   \item All raw Picarro data files nfor this experiment. Can be in nested subdirectories.
 #'   NB picarro files are assumed to end in .dat -- No other files in the data path should have this ending
-#'   2. fractional_volume.txt  = provides fraction of head space gas divided by total volume including residal gas in the analyzer and pipework
-#'   3. logfile (filename must start with the characters "logfile"), which contains epoch time, sample ID, and step ID:
-#'           Step 2 = sample analysis
-#'           Step 3 = end of step 2
-#'           Step 5 = purge analysis
-#'           Step 6 = end of step 5
+#'   \item fractional_volume.txt  = provides fraction of head space gas divided by total volume including residal gas in the analyzer and pipework
+#'   \item logfile (filename must start with the characters "logfile"), which contains epoch time, sample ID, and step ID 
+#'           ("Step 2" = sample analysis;
+#'            "Step 3" = end of step 2;
+#'            "Step 5" = purge analysis;
+#'            "Step 6" = end of step 5).
+#' }
 #'
 #' @param data_path Directory containing all raw data from picarro analyzer within nested subdirectories. If not provided, user will be asked for path interactively.
 #' @param lambda Optional smoothing parameter (positive real numeric). Higher values give greater smoothing. Smaller values follow data more closely. See help(regSmooth) for more details.
@@ -47,7 +54,6 @@ choose_directory = function(caption = 'Select data directory') {
 #' @author
 #'   Dominic Woolf.
 #'   d.woolf@cornell.edu
-#' @keywords Soil Incubation
 #' @examples
 #' short.data = extract_picarro()
 #' library(ggplot2)

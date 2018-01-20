@@ -10,13 +10,14 @@ choose_directory(caption = "Select data directory")
 \item{caption}{Optional text to print in title of selection dialogue}
 }
 \value{
-Length one charcter vector containing path to selected directory
+Length one character vector containing path to selected directory
 }
 \description{
 Function to select a directory interactively in a platform-independent way
 }
 \details{
-This function allows directory selection in a way that should work on any (most?) platforms
+This function allows directory selection in a way that should work 
+on any (most?) platforms.
 }
 \examples{
 choose_directory()

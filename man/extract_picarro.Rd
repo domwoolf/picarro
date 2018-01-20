@@ -18,17 +18,20 @@ Provides a data.table with respired CO2 and CH4 concentrations and delta-13C val
 Function to convert raw data from picarro analyzer to respiration data
 }
 \details{
-This function returns a data.table with respired CO2 and CH4 concentrations and delta-13C values for each sample at each samping time
+This function returns a data.table with respired CO2 and CH4 
+concentrations and delta-13C values for each sample at each samping time
 
-The data path **must** contain the following three things: 
-  1. All raw Picarro data files nfor this experiment. Can be in nested subdirectories.
+The data path \strong{must} contain the following three things: 
+\enumerate{
+  \item All raw Picarro data files nfor this experiment. Can be in nested subdirectories.
   NB picarro files are assumed to end in .dat -- No other files in the data path should have this ending
-  2. fractional_volume.txt  = provides fraction of head space gas divided by total volume including residal gas in the analyzer and pipework
-  3. logfile (filename must start with the characters "logfile"), which contains epoch time, sample ID, and step ID:
-          Step 2 = sample analysis
-          Step 3 = end of step 2
-          Step 5 = purge analysis
-          Step 6 = end of step 5
+  \item fractional_volume.txt  = provides fraction of head space gas divided by total volume including residal gas in the analyzer and pipework
+  \item logfile (filename must start with the characters "logfile"), which contains epoch time, sample ID, and step ID 
+          ("Step 2" = sample analysis;
+           "Step 3" = end of step 2;
+           "Step 5" = purge analysis;
+           "Step 6" = end of step 5).
+}
 }
 \examples{
 short.data = extract_picarro()
@@ -45,5 +48,3 @@ ggplot(short.data[-1], aes(day, evolved.ch4)) +
 Dominic Woolf.
   d.woolf@cornell.edu
 }
-\keyword{Incubation}
-\keyword{Soil}
