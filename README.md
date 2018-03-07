@@ -2,8 +2,10 @@
 Contains functions for processing and analyzing picarro respiration data from Lehmann lab parallel incubation rig
 
 Installation instructions in R:
-  library(devtools)
-  install_github('/domwoolf/picarro')
+
+  1. library(devtools)
+  2. install_github('/domwoolf/picarro')
+
 Required inputs:
 
   data_path = directory containing all raw data from picarro analyzer within nested subdirectories.
