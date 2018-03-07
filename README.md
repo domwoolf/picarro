@@ -4,7 +4,7 @@ Contains functions for processing and analyzing picarro respiration data from Le
 Installation instructions in R:
 
   1. library(devtools)
-  2. install_github('/domwoolf/picarro')
+  2. install_github('domwoolf/picarro')
 
 Required inputs:
 

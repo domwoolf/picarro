@@ -36,7 +36,7 @@ choose_directory = function(caption = 'Select data directory') {
 #'
 #' The data path \strong{must} contain the following three things: 
 #' \enumerate{
-#'   \item All raw Picarro data files nfor this experiment. Can be in nested subdirectories.
+#'   \item All raw Picarro data files for this experiment. Can be in nested subdirectories.
 #'   NB picarro files are assumed to end in .dat -- No other files in the data path should have this ending
 #'   \item fractional_volume.txt  = provides fraction of head space gas divided by total volume including residal gas in the analyzer and pipework
 #'   \item logfile (filename must start with the characters "logfile"), which contains epoch time, sample ID, and step ID 
@@ -77,6 +77,7 @@ extract_picarro = function(data_path = NA, lambda = 1e-4) {
   
   picarro_files = list.files(data_path, pattern='.*[.]dat$', recursive = T, full.names = TRUE)
   if (!(length(picarro_files) >= 1)) stop('No Picarro data files found in selected directory')
+  cat('I will be very happy to extract the data for you. Please be patient, I\'m working as fast as I can.')
   columns_to_keep = c("EPOCH_TIME", "HP_12CH4_dry", "HP_Delta_iCH4_Raw", "12CO2_dry", "Delta_Raw_iCO2")
   fread.picarro = function(fname) {
     pic.data.i = fread(fname)
@@ -115,7 +116,7 @@ extract_picarro = function(data_path = NA, lambda = 1e-4) {
   # smooth the CO2 data before finding maximum... to protect against noise spikes
   cat('Smoothing data. This may take a minute.\n')
   pic.data[, CO2_12_smooth := regSmooth(EPOCH_TIME, `12CO2_dry`, lambda = 1e-4)$yhat, by = .(combined_sample_cycle, step)]
-  cat('Finished smoothing :-)')
+  cat('Finished smoothing. Have a nice day :-)')
   #############################################################################################################
   #  Reduce data to one row per sample measurement  
   #############################################################################################################
@@ -179,3 +180,35 @@ extract_picarro = function(data_path = NA, lambda = 1e-4) {
   short.data[, day := (epoch - epoch[1]) / (60 * 60 * 24), by = sample]
   return(short.data)
 }
+
+
+#' Isotope partitioning of CO2 and CH4 data from Picarro analyzer
+#'
+#' Function to partition respiration data from picarro analyzer by source, using d13C of two substrates
+#' @details
+#' This function returns a data.table with respired CO2 and CH4 
+#' concentrations and delta-13C values for each sample at each samping time
+#'
+#' The data path \strong{must} contain the following: 
+#' \enumerate{
+#'   \item jars.txt = file specifying the treatment in each jar. Also has columns for quantity of each substrate, and the headspace volume of the jar.
+#'   \item treatments.txt = file specifying d13C of two substrates for each treatment. Treatment names must correspond with thise in jars.txt
+#' }
+#'
+#' @param respiration_data data.table containing extracted respiration data from Picarro analyzer. Typically created by function extract_picarro
+#' @param data_path Directory containing jars.txt and treatments.txt.  If not provided, user will be asked for path interactively.
+#' @import data.table 
+#' @export
+#' @return Provides a data.table with the original respired CO2 and CH4 concentrations and delta-13C values 
+#' for each sample at each samping time, from the input data.table. 
+#' Columns are added to this data.table for mass of CO2 and CH4 respired during ech sampling period,
+#' cumulative values of the same - both total and partitioned per substrate. 
+#' @author
+#'   Dominic Woolf.
+#'   d.woolf@cornell.edu
+#' @examples
+#' short.data = extract_picarro()
+#' partition.data = partition_picarro(short.data)
+partition_picarro = function(respiration_data, data_path = NA) {
+
+  }  
