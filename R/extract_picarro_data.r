@@ -47,6 +47,33 @@ choose_directory = function(caption = 'Select data directory') {
 #'            "Step 5" = purge analysis;
 #'            "Step 6" = end of step 5).
 #' }
+#' The returned data.table columns, and their descitions are:
+#' 
+#' jar = jar number to which row corresponds
+#' epoch = epoch time of measurement
+#' cycle = number of sampling cycle (i.e. increments each time a specific jar is analyzed)
+#' combined_jar_cycle = jar number and cycle number pasted together
+#' CO2_purge = Picarro-measured CO2 concentration at the end of the purge step
+#' CO2_respiration = Picarro-measured CO2 concentration at the peak (smoothed maximum) of the sampling step 
+#' d13C_purge = Picarro-measured d13-CO2 at the end of the purge step
+#' d13C_respiration = Picarro-measured d13-CO2 at the concentration-peak (smoothed maximum) of the sampling step 
+#' <dilute.co2 is 1st value from each jar/cycle. I.e. concentration in pipework before headspace gas reaches the analyser>
+#' dilute.co2_purge = dilute.co2 concentration in purge step
+#' dilute.co2_respiration = dilute.co2 concentration in sampling step
+#' dilute.d13C_purge = dilute.co2 d13C in purge step
+#' dilute.d13C_respiration = dilute.co2 d13C in sampling step
+#' fractional_volume = jar-specific correction factor for fraction of gas at picarro that originates from within the headspace rather than the pipework
+#' headspace.co2 = CO2_respiration, corrected for fractional_volume
+#' headspace.co2_purge = CO2_purge, corrected for fractional_volume
+#' fractional_mass = fractional_volume converted to mass of CO2 basis
+#' respired.co2 = CO2_respiration, corrected for fractional_volume
+#' headspace.d13c = d13C_respiration, corrected for fractional_volume \strong{This correction provides highly suspect values.  Use d13C_respiration values instead}
+#' day = epoch time converted into days since the first measurement on that sample
+
+#' <Methane (CH4 has columns corresponding to the CO2 descriptions above):
+#'    CH4_purge, CH4_respiration, d13CH4_purge, d13CH4_respiration, dilute.ch4_purge, 
+#'    dilute.ch4_respiration, dilute.d13CH4_purge, dilute.d13CH4_respiration
+#'    CH4_purge, headspace.ch4, headspace.ch4_purge, headspace.d13ch4, evolved.ch4
 #'
 #' @param data_path Directory containing all raw data from picarro analyzer within nested subdirectories. If not provided, user will be asked for path interactively.
 #' @param lambda Optional smoothing parameter (positive real numeric). Higher values give greater smoothing. Smaller values follow data more closely. See help(regSmooth) for more details.
@@ -235,7 +262,7 @@ partition_picarro = function(respiration_data = short.data, data_path = NA, remo
   respiration_data[, respired.co2_C.mg := respired.co2 * headspace.vol * co2.density_30C * co2.carbon.frac]
 
   #partition the CO2-carbon
-  respiration_data[, amendment.co2_C.mg := respired.co2_C.mg * (amendment.d13c - headspace.d13c)/(amendment.d13c - soil.d13c)]
+  respiration_data[, amendment.co2_C.mg := respired.co2_C.mg * (amendment.d13c - d13C_respiration)/(amendment.d13c - soil.d13c)]
   respiration_data[, soil.co2_C.mg := respired.co2_C.mg - amendment.co2_C.mg]
   respiration_data[, cum.co2_C.mg := cumsum(respired.co2_C.mg), by = jar]
   respiration_data[, cum.amendment.co2_C.mg := cumsum(amendment.co2_C.mg), by = jar]
