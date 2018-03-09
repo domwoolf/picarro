@@ -47,7 +47,7 @@ choose_directory = function(caption = 'Select data directory') {
 #'            "Step 5" = purge analysis;
 #'            "Step 6" = end of step 5).
 #' }
-#' The returned data.table columns, and their descitions are:
+#' The returned data.table columns, and their descriptions are:
 #' 
 #' jar = jar number to which row corresponds
 #' epoch = epoch time of measurement
