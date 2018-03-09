@@ -2,4 +2,5 @@
 
 export(choose_directory)
 export(extract_picarro)
+export(partition_picarro)
 import(data.table)
