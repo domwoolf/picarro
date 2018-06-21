@@ -95,7 +95,7 @@ choose_directory = function(caption = 'Select data directory') {
 #' ggplot(short.data[-1], aes(day, evolved.ch4)) +
 #'   geom_line() +
 #'   facet_wrap(~ jar)
-extract_picarro = function(data_path = NA, lambda = 1e-4) {
+extract_picarro = function(data_path = NA, lambda = 1e-4, raw.data = FALSE) {
   #
   #############################################################################################################
   #  Load Data Files 
@@ -108,7 +108,7 @@ extract_picarro = function(data_path = NA, lambda = 1e-4) {
   
   picarro_files = list.files(data_path, pattern='.*[.]dat$', recursive = T, full.names = TRUE)
   if (!(length(picarro_files) >= 1)) stop('No Picarro data files found in selected directory')
-  cat('I will be very happy to extract the data for you. Please be patient, I\'m working as fast as I can.\n')
+  cat('Reading Picarro data files.\n')
   columns_to_keep = c("EPOCH_TIME", "HP_12CH4_dry", "HP_Delta_iCH4_Raw", "12CO2_dry", "Delta_Raw_iCO2")
   fread.picarro = function(fname) {
     pic.data.i = fread(fname)
@@ -118,9 +118,9 @@ extract_picarro = function(data_path = NA, lambda = 1e-4) {
     pic.data.i
   }
   pic.data = fread.picarro(picarro_files[1]) # read first picarro data file
-  for(i in 2:length(picarro_files)) { # then append all the other files into the same data.table
+  if (length(picarro_files) > 1){ for(i in 2:length(picarro_files)) { # then append all the other files into the same data.table
     pic.data <- rbind(pic.data, fread.picarro(picarro_files[i]), fill=TRUE)
-  }
+  }}
   setkey(pic.data, 'EPOCH_TIME') # sort data chronologically
   
   #############################################################################################################
@@ -138,9 +138,10 @@ extract_picarro = function(data_path = NA, lambda = 1e-4) {
   pic.data[step == 'step2', step := 'respiration'] # give the steps meaningful names
   pic.data[step == 'step5', step := 'purge']
   cycle.length = which(log_data[-1, paste(step,sample)] == log_data[1, paste(step,sample)])[1] # how many lines in log file before we return to the same jar and step
+  if (is.na(cycle.length)) cycle.length = log_data[,.N] # in case the log file is too short for the cycle to repeat (i.e. only one sampling time per jar)
   
   log_data[, cycle := ceiling((1:.N) / cycle.length)] # number the data collection cycles. Each cycle represents how long it takes to go through all jars and the start over
-  pic.data[, cycle := log_data[log_previous, cycle]]
+  pic.data[, cycle := log_data[log_previous, cycle]] 
   
   pic.data[step=="purge", cycle := cycle + 1L]     # Associate purge data with analysis data that follows (rather than precedes) it
   pic.data[, combined_jar_cycle := factor(paste(formatC(jar, digits = 4, flag="0"), formatC(cycle, digits = 4, flag="0"), sep=","))]
@@ -210,7 +211,7 @@ extract_picarro = function(data_path = NA, lambda = 1e-4) {
   #############################################################################################################
   short.data[, day := (epoch - epoch[1]) / (60 * 60 * 24), by = jar]
   cat('All done. Have a nice day :-)\n')
-  return(short.data)
+  if (raw.data) return(list(short.data=short.data, long.data=long.data, pic.data=pic.data)) else return(short.data)
 }
 
 
