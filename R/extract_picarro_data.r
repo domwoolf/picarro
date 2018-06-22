@@ -89,10 +89,15 @@ choose_directory = function(caption = 'Select data directory') {
 #' If not provided, user will be asked for path interactively.
 #' @param lambda Optional smoothing parameter (positive real numeric). 
 #' Higher values give greater smoothing. Smaller values follow data more closely. See help(regSmooth) for more details.
+#' @param raw.data Optional logical value for whether to return raw data tables in addition to the processed
+#' one.  Useful for diagnostics and trouble shooting.
 #' @import data.table 
 #' @export
 #' @return Provides a data.table with respired CO2 and CH4 concentrations and delta-13C values for each jar 
-#' at each samping time. See details.
+#' at each samping time. See details.  If called with raw.data = TRUE, then function returns a named list containing
+#' short.data = the above table; long.data = the same data in long format; and pic.data = the raw Picarro data, with
+#' columns added for sample number, step, cycle, and smoothed data.
+#'  
 #' @author
 #'   Dominic Woolf.
 #'   d.woolf@cornell.edu
