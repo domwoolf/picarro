@@ -4,15 +4,18 @@
 \alias{extract_picarro}
 \title{Data extraction from Lehmann lab Picarro isotope analyzer}
 \usage{
-extract_picarro(data_path = NA, lambda = 1e-04)
+extract_picarro(data_path = NA, lambda = 1e-04, raw.data = FALSE)
 }
 \arguments{
-\item{data_path}{Directory containing all raw data from picarro analyzer within nested subdirectories. If not provided, user will be asked for path interactively.}
+\item{data_path}{Directory containing all raw data from picarro analyzer within nested subdirectories. 
+If not provided, user will be asked for path interactively.}
 
-\item{lambda}{Optional smoothing parameter (positive real numeric). Higher values give greater smoothing. Smaller values follow data more closely. See help(regSmooth) for more details.}
+\item{lambda}{Optional smoothing parameter (positive real numeric). 
+Higher values give greater smoothing. Smaller values follow data more closely. See help(regSmooth) for more details.}
 }
 \value{
-Provides a data.table with respired CO2 and CH4 concentrations and delta-13C values for each jar at each samping time
+Provides a data.table with respired CO2 and CH4 concentrations and delta-13C values for each jar 
+at each samping time. See details.
 }
 \description{
 Function to convert raw data from picarro analyzer to respiration data
@@ -39,22 +42,30 @@ The returned data.table columns, and their descriptions are:
 \item epoch = epoch time of measurement
 \item cycle = number of sampling cycle (i.e. increments each time a specific jar is analyzed)
 \item combined_jar_cycle = jar number and cycle number pasted together
-\item CO2_purge = Picarro-measured CO2 concentration at the end of the purge step
-\item CO2_respiration = Picarro-measured CO2 concentration at the peak (smoothed maximum) of the sampling step 
-\item d13C_purge = Picarro-measured d13-CO2 at the end of the purge step
-\item d13C_respiration = Picarro-measured d13-CO2 at the concentration-peak (smoothed maximum) of the sampling step 
-\item <dilute.co2 is 1st value from each jar/cycle. I.e. concentration in pipework before headspace gas reaches the analyser>
-\item dilute.co2_purge = dilute.co2 concentration in purge step
-\item dilute.co2_respiration = dilute.co2 concentration in sampling step
-\item dilute.d13C_purge = dilute.co2 d13C in purge step
-\item dilute.d13C_respiration = dilute.co2 d13C in sampling step
-\item fractional_volume = jar-specific correction factor for fraction of gas at picarro that originates from within the headspace rather than the pipework
-\item headspace.co2 = CO2_respiration, corrected for fractional_volume
-\item headspace.co2_purge = CO2_purge, corrected for fractional_volume
-\item fractional_mass = fractional_volume converted to mass of CO2 basis
-\item respired.co2 = CO2_respiration, corrected for fractional_volume
-\item headspace.d13c = d13C_respiration, corrected for fractional_volume \strong{This correction provides highly suspect values.  Use d13C_respiration values instead}
-\item day = epoch time converted into days since the first measurement on that sample
+\item CO2_purge = Picarro-measured CO2 concentration at the end of the purge step (ppm)
+\item CO2_respiration = Picarro-measured CO2 concentration at the peak (smoothed maximum) of the sampling step (ppm)
+\item d13C_purge = Picarro-measured d13-CO2 at the end of the purge step (permille). 
+\strong{Note that this value is unreliable (just noise), when purging with CO2-free air.  
+Do not use unless you are sure you understand what you are doing.}
+\item d13C_respiration = Picarro-measured d13-CO2 at the concentration-peak (smoothed maximum) of 
+the sampling step (permille).
+\item <dilute.co2 is 1st value from each jar/cycle. I.e. concentration in pipework before 
+headspace gas reaches the analyser>
+\strong{d13C values for dilute.co2 could be unreliable if CO2 concentrations are low.  
+Use these isotope values with caution.}
+\item dilute.co2_purge = dilute.co2 concentration in purge step (ppm).
+\item dilute.co2_respiration = dilute.co2 concentration in sampling step (ppm).
+\item dilute.d13C_purge = dilute.co2 d13C in purge step (permille).
+\item dilute.d13C_respiration = dilute.co2 d13C in sampling step (permille).
+\item fractional_volume = jar-specific correction factor for fraction of gas at picarro that 
+originates from within the headspace rather than the pipework
+\item headspace.co2 = CO2_respiration, corrected for fractional_volume (ppm).
+\item headspace.co2_purge = CO2_purge, corrected for fractional_volume (ppm).
+\item fractional_mass = fractional_volume converted to mass of CO2 basis (mg/mg)
+\item respired.co2 = CO2_respiration, corrected for fractional_volume (ppm).
+\item headspace.d13c = d13C_respiration, corrected for fractional_volume (permille).
+\strong{This correction provides highly suspect values.  Use d13C_respiration values instead}.
+\item day = epoch time converted into days since the first measurement on that sample (days).
 \item <Methane (CH4 has columns corresponding to the CO2 descriptions above):
    CH4_purge, CH4_respiration, d13CH4_purge, d13CH4_respiration, dilute.ch4_purge, 
    dilute.ch4_respiration, dilute.d13CH4_purge, dilute.d13CH4_respiration
