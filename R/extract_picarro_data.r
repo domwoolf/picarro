@@ -56,12 +56,12 @@ choose_directory = function(caption = 'Select data directory') {
 #' \item combined_jar_cycle = jar number and cycle number pasted together
 #' \item CO2_purge = Picarro-measured CO2 concentration at the end of the purge step (ppm)
 #' \item CO2_respiration = Picarro-measured CO2 concentration at the peak (smoothed maximum) of the sampling step (ppm)
-#' \item d13C_purge = Picarro-measured d13-CO2 at the end of the purge step (permille). 
+#' \item d13C_purge = Picarro-measured d13-CO2 (smoothed) at the end of the purge step (permille). 
 #' \strong{Note that this value is unreliable (just noise), when purging with CO2-free air.  
 #' Do not use unless you are sure you understand what you are doing.}
 #' \item d13C_respiration = Picarro-measured d13-CO2 at the concentration-peak (smoothed maximum) of 
 #' the sampling step (permille).
-#' \item <dilute.co2 is 1st value from each jar/cycle. I.e. concentration in pipework before 
+#' \item <dilute.co2 is (smoothed) 1st value from each jar/cycle. I.e. concentration in pipework before 
 #' headspace gas reaches the analyser>
 #' \strong{d13C values for dilute.co2 could be unreliable if CO2 concentrations are low.  
 #' Use these isotope values with caution.}
