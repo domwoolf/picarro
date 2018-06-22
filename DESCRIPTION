@@ -1,6 +1,6 @@
 Package: Picarro
 Title: Lehmann lab Picarro
-Version: 0.02
+Version: 0.03.001
 Date: 2018-1-20
 Author: Dominic Woolf
 Authors@R: person("Dominic", "Woolf", email = "d.woolf@cornell.edu", role = c("aut", "cre"))
