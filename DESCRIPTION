@@ -9,4 +9,4 @@ Description: This package provides functions to process and analyze data from Le
 Remotes: domwoolf/regSmooth
 Depends: R (>= 3.1.1), data.table, tcltk, regSmooth
 License: GPL-3
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1

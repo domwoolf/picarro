@@ -4,11 +4,19 @@
 \alias{extract_picarro}
 \title{Data extraction from Lehmann lab Picarro isotope analyzer}
 \usage{
-extract_picarro(data_path = NA, lambda = 1e-04, raw.data = FALSE)
+extract_picarro(data_path = NA, use_dodgy_fudge_factor, lambda = 1e-04,
+  raw.data = FALSE)
 }
 \arguments{
 \item{data_path}{Directory containing all raw data from picarro analyzer within nested subdirectories. 
 If not provided, user will be asked for path interactively.}
+
+\item{use_dodgy_fudge_factor}{Required parameter indicting whether to correct headspace 
+concentrations using the factors in fractional_volume.txt file.  Note that these correction factors were
+introduced by Silene deCiuces to correct for observed differences between a
+standard calibration gas and Picarro measurements. These discrepancies may or may not have been caused by mixing with gas in the pipework or 
+by exchanges with ambient air through leaks.Depending on the current setup of the instrument, these
+corrections may or may not be required.  If you are not sure, then please run a calibration standard to find out.}
 
 \item{lambda}{Optional smoothing parameter (positive real numeric). 
 Higher values give greater smoothing. Smaller values follow data more closely. See help(regSmooth) for more details.}
@@ -33,7 +41,7 @@ The data path \strong{must} contain the following three things:
 \enumerate{
   \item All raw Picarro data files for this experiment. Can be in nested subdirectories.
   NB picarro files are assumed to end in .dat -- No other files in the data path should have this ending
-  \item fractional_volume.txt  = provides fraction of head space gas divided by total volume including residal gas in the analyzer and pipework
+  \item fractional_volume.txt  = provides fraction of head space gas divided by total volume including residal gas in the analyzer and pipework. Only required if the parameter use_dodgy_fudge_factor is set to TRUE
   \item logfile (filename must start with the characters "logfile"), which contains epoch time, sample ID, and step ID 
           ("Step 2" = sample analysis;
            "Step 3" = end of step 2;
@@ -49,26 +57,26 @@ The returned data.table columns, and their descriptions are:
 \item combined_jar_cycle = jar number and cycle number pasted together
 \item CO2_purge = Picarro-measured CO2 concentration at the end of the purge step (ppm)
 \item CO2_respiration = Picarro-measured CO2 concentration at the peak (smoothed maximum) of the sampling step (ppm)
-\item d13C_purge = Picarro-measured d13-CO2 (smoothed) at the end of the purge step (permille). 
+\item d13C_purge = Picarro-measured d13-CO2 (smoothed) at the end of the purge step (per mille). 
 \strong{Note that this value is unreliable (just noise), when purging with CO2-free air.  
 Do not use unless you are sure you understand what you are doing.}
 \item d13C_respiration = Picarro-measured d13-CO2 at the concentration-peak (smoothed maximum) of 
-the sampling step (permille).
+the sampling step (per mille).
 \item <dilute.co2 is (smoothed) 1st value from each jar/cycle. I.e. concentration in pipework before 
 headspace gas reaches the analyser>
 \strong{d13C values for dilute.co2 could be unreliable if CO2 concentrations are low.  
 Use these isotope values with caution.}
 \item dilute.co2_purge = dilute.co2 concentration in purge step (ppm).
 \item dilute.co2_respiration = dilute.co2 concentration in sampling step (ppm).
-\item dilute.d13C_purge = dilute.co2 d13C in purge step (permille).
-\item dilute.d13C_respiration = dilute.co2 d13C in sampling step (permille).
+\item dilute.d13C_purge = dilute.co2 d13C in purge step (per mille).
+\item dilute.d13C_respiration = dilute.co2 d13C in sampling step (per mille).
 \item fractional_volume = jar-specific correction factor for fraction of gas at picarro that 
 originates from within the headspace rather than the pipework
 \item headspace.co2 = CO2_respiration, corrected for fractional_volume (ppm).
 \item headspace.co2_purge = CO2_purge, corrected for fractional_volume (ppm).
 \item fractional_mass = fractional_volume converted to mass of CO2 basis (mg/mg)
 \item respired.co2 = CO2_respiration, corrected for fractional_volume (ppm).
-\item headspace.d13c = d13C_respiration, corrected for fractional_volume (permille).
+\item headspace.d13c = d13C_respiration, corrected for fractional_volume (per mille).
 \strong{This correction provides highly suspect values.  Use d13C_respiration values instead}.
 \item day = epoch time converted into days since the first measurement on that sample (days).
 \item <Methane (CH4 has columns corresponding to the CO2 descriptions above):

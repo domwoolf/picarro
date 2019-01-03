@@ -40,7 +40,7 @@ choose_directory = function(caption = 'Select data directory') {
 #' \enumerate{
 #'   \item All raw Picarro data files for this experiment. Can be in nested subdirectories.
 #'   NB picarro files are assumed to end in .dat -- No other files in the data path should have this ending
-#'   \item fractional_volume.txt  = provides fraction of head space gas divided by total volume including residal gas in the analyzer and pipework
+#'   \item fractional_volume.txt  = provides fraction of head space gas divided by total volume including residal gas in the analyzer and pipework. Only required if the parameter use_dodgy_fudge_factor is set to TRUE
 #'   \item logfile (filename must start with the characters "logfile"), which contains epoch time, sample ID, and step ID 
 #'           ("Step 2" = sample analysis;
 #'            "Step 3" = end of step 2;
@@ -91,6 +91,12 @@ choose_directory = function(caption = 'Select data directory') {
 #' Higher values give greater smoothing. Smaller values follow data more closely. See help(regSmooth) for more details.
 #' @param raw.data Optional logical value for whether to return raw data tables in addition to the processed
 #' one.  Useful for diagnostics and trouble shooting.
+#' @param use_dodgy_fudge_factor Required parameter indicting whether to correct headspace 
+#' concentrations using the factors in fractional_volume.txt file.  Note that these correction factors were
+#' introduced by Silene deCiuces to correct for observed differences between a
+#' standard calibration gas and Picarro measurements. These discrepancies may or may not have been caused by mixing with gas in the pipework or 
+#' by exchanges with ambient air through leaks.Depending on the current setup of the instrument, these
+#' corrections may or may not be required.  If you are not sure, then please run a calibration standard to find out.
 #' @import data.table 
 #' @export
 #' @return Provides a data.table with respired CO2 and CH4 concentrations and delta-13C values for each jar 
@@ -111,16 +117,29 @@ choose_directory = function(caption = 'Select data directory') {
 #' ggplot(short.data[-1], aes(day, evolved.ch4)) +
 #'   geom_line() +
 #'   facet_wrap(~ jar)
-extract_picarro = function(data_path = NA, lambda = 1e-4, raw.data = FALSE) {
+extract_picarro = function(data_path = NA, use_dodgy_fudge_factor, lambda = 1e-4, raw.data = FALSE) {
   #
   #############################################################################################################
   #  Load Data Files 
   #############################################################################################################
+  if (missing(use_dodgy_fudge_factor)) {
+    cat(
+'You did not specify the parameter use_dodgy_fudge_factor. 
+This factor will now be used by default.  
+Note that this factor uses the values specified in the file "fractional_volume.txt" 
+and attempts to correct the Picarro measuements based on how much of the sampled gas is from the 
+sample headspace versus from residual gas in the pipework.  
+It is possible that this fudge factor was in fact based on exchanges with ambient air through
+unresolved leaks rather than on any real mixing of sample and flush gases.
+If you have not already done so, you should determine whether this correction is indeed necessary.
+And use a standard gas to measure the correct calibration values for your test.\n')
+    use_dodgy_fudge_factor = TRUE 
+  }
   if (is.na(data_path)) data_path = choose_directory(caption = "Select data directory")
   logfile = list.files(data_path, pattern = 'logfile*', full.names = TRUE)
   if (length(logfile) != 1L) stop('Need exactly one logfile in the data path')
   log_data = fread(logfile)
-  fractional_volume = fread(paste0(data_path,"/fractional_volume.txt"))
+  if (use_dodgy_fudge_factor) fractional_volume = fread(paste0(data_path,"/fractional_volume.txt"))
   
   picarro_files = list.files(data_path, pattern='.*[.]dat$', recursive = T, full.names = TRUE)
   if (!(length(picarro_files) >= 1)) stop('No Picarro data files found in selected directory')
@@ -201,7 +220,11 @@ extract_picarro = function(data_path = NA, lambda = 1e-4, raw.data = FALSE) {
   #  Correct CO2 concentrations for residual co2 in pipework & analyzer
   #############################################################################################################
   # fractional_volume from the file fractional_volume.txt provides headspace divided by total volume (incl. analyzer and pipework)
-  short.data = merge(short.data, fractional_volume, all.x = T, by='jar')
+  if (use_dodgy_fudge_factor) {
+    short.data = merge(short.data, fractional_volume, all.x = T, by='jar')
+  } else {
+    short.data[, fractional_volume := 1]
+  }
   
   # headspace CO2 is measured CO2, adjusted for the fraction of CO2 from pipework dilutant
   short.data[, headspace.co2  := (CO2_respiration - (1-fractional_volume) * dilute.co2_respiration) / fractional_volume ]
