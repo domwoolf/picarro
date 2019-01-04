@@ -123,16 +123,12 @@ extract_picarro = function(data_path = NA, use_dodgy_fudge_factor, lambda = 1e-4
   #  Load Data Files 
   #############################################################################################################
   if (missing(use_dodgy_fudge_factor)) {
-    cat(
-'You did not specify the parameter use_dodgy_fudge_factor. 
-This factor will now be used by default.  
-Note that this factor uses the values specified in the file "fractional_volume.txt" 
-and attempts to correct the Picarro measuements based on how much of the sampled gas is from the 
-sample headspace versus from residual gas in the pipework.  
-It is possible that this fudge factor was in fact based on exchanges with ambient air through
-unresolved leaks rather than on any real mixing of sample and flush gases.
-If you have not already done so, you should determine whether this correction is indeed necessary.
-And use a standard gas to measure the correct calibration values for your test.\n')
+    cat(strwrap(
+      'You did not specify the parameter use_dodgy_fudge_factor. This factor will now be used by default.\n\n
+Note that this factor uses the values specified in the file "fractional_volume.txt", and attempts to correct the Picarro measuements based on how much of the sampled gas is from the sample headspace versus from residual gas in the pipework.\n\n
+It is possible that this fudge factor was, in fact, based on exchanges with ambient air through unresolved leaks rather than on any real mixing of sample and flush gases.\n
+If you have not already done so, you should determine whether this correction is indeed necessary. And use a standard gas to measure the correct calibration values for your test.\n')
+      ,fill = TRUE)
     use_dodgy_fudge_factor = TRUE 
   }
   if (is.na(data_path)) data_path = choose_directory(caption = "Select data directory")
