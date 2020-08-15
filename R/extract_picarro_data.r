@@ -122,6 +122,8 @@ extract_picarro = function(data_path = NA, use_dodgy_fudge_factor, lambda = 1e-4
   #############################################################################################################
   #  Load Data Files 
   #############################################################################################################
+  old.options = options(warn=1)
+  on.exit(options(old.options))
   if (missing(use_dodgy_fudge_factor)) {
     cat(strwrap(
       'You did not specify the parameter use_dodgy_fudge_factor. This factor will now be used by default.\n\n
@@ -142,17 +144,22 @@ If you have not already done so, you should determine whether this correction is
   cat('Reading Picarro data files.\n')
   columns_to_keep = c("EPOCH_TIME", "HP_12CH4_dry", "HP_Delta_iCH4_Raw", "12CO2_dry", "Delta_Raw_iCO2")
   fread.picarro = function(fname) {
-    pic.data.i = fread(fname)
-    if (length(setdiff(columns_to_keep, names(pic.data.i)))) {
-      stop(paste('Columns', setdiff(columns_to_keep, names(pic.data.i)), 'missing from', fname))
+    pic.data = fread(fname, fill = TRUE)
+    if (length(setdiff(columns_to_keep, names(pic.data)))) {
+      stop(paste('Columns', setdiff(columns_to_keep, names(pic.data)), 'missing from', fname))
     }
-    pic.data.i
+    if (!all(complete <- complete.cases(pic.data))) {
+      warning(paste('data missing from', fname, ": skipping line(s)", which(!complete), "\n"))
+      pic.data = pic.data[complete]
+    } 
+    pic.data
   }
-  pic.data = fread.picarro(picarro_files[1]) # read first picarro data file
-  if (length(picarro_files) > 1){ for(i in 2:length(picarro_files)) { # then append all the other files into the same data.table
-    pic.data <- rbind(pic.data, fread.picarro(picarro_files[i]), fill=TRUE)
-  }}
+  pic.data = lapply(picarro_files, fread.picarro)
+  pic.data = rbindlist(pic.data)
   setkey(pic.data, 'EPOCH_TIME') # sort data chronologically
+  difftime = pic.data[, diff(EPOCH_TIME)]
+  gaps = which(difftime > mean(difftime) + 5*sd(difftime))
+  if (length(gaps)) warning(paste('large gap in data at EPOCH time = ', pic.data[gaps, EPOCH_TIME]))
   
   #############################################################################################################
   #  Data Preprocessing  
@@ -163,9 +170,18 @@ If you have not already done so, you should determine whether this correction is
   pic.data[, log_previous := findInterval(EPOCH_TIME, log_data$epoch, left.open  = TRUE)] # find which line of the logfile is the last one before current data epoch time
   pic.data[, step   := log_data[log_previous, step]]   # read (from logfile) which step we are on at current time
   pic.data[, jar := log_data[log_previous, sample]] # read (from logfile) which sample we are on at current time
-  
+  pic.data[, last(EPOCH_TIME) - first(EPOCH_TIME), by=.(step, log_previous)][1:4, max(V1)]
   pic.data = pic.data[step %in% c('step2', 'step5')] # only keep sample and purge analysis data
-  pic.data = pic.data[complete.cases(pic.data)] # remove any rows with NA
+  max_step.time = pic.data[, .(max(last(EPOCH_TIME) - first(EPOCH_TIME))), by=.(step, log_previous)][-.N, .(maxtime = max(V1)), by=step]
+  final_step = pic.data[, . (last(EPOCH_TIME) - first(EPOCH_TIME)), by=.(step, log_previous)][.N]
+  if (final_step[, V1 > max_step.time[step == .SD$step, maxtime *1.5]]) {
+    # there seems to be far too much data following the fnal entry in the log file 
+    # we can assume that the log file stopped recording.
+    # therefore issue a warning, but truncate the data and process anything before the last logfile entry
+    warning('The logfile seems to have stopped recording before the Picarro data stopped.  Removing data after the final logfile entry, and continue processing the rest...')
+    pic.data = pic.data[log_previous < final_step$log_previous]
+  }
+  # pic.data = pic.data[complete.cases(pic.data)] # remove any rows with NA - commented out as we did this while reading files
   pic.data[step == 'step2', step := 'respiration'] # give the steps meaningful names
   pic.data[step == 'step5', step := 'purge']
   cycle.length = which(log_data[-1, paste(step,sample)] == log_data[1, paste(step,sample)])[1] # how many lines in log file before we return to the same jar and step
